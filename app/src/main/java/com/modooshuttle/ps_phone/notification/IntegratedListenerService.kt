@@ -1,84 +1,81 @@
 package com.modooshuttle.ps_phone.notification
 
-
-import android.app.Notification
-import android.app.Person
+import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.modooshuttle.ps_phone.notification.handler.KakaoTalkMessageHandler
+import com.modooshuttle.ps_phone.notification.handler.SmsMessageHandler
+
+data class MessageInfo(
+    val type: String,              // "카카오톡" or "문자메시지"
+    val sender: String,            // 발신자 이름
+    val phone: String?,            // 전화번호 (문자메시지만 해당)
+    val content: String,           // 메시지 내용
+    val room: String,              // 방 이름 (카톡 단톡방이면 방 이름, 아니면 "개인")
+    val packageName: String,       // 원본 앱 패키지명
+    val timestamp: Long = System.currentTimeMillis()
+)
 
 class IntegratedListenerService : NotificationListenerService() {
 
-  private val TAG = "MsgListener"
+    private val TAG = "IntegratedListener"
+    private val repository = MessageRepository()
 
-  // 감시할 패키지 목록
-  private val targetPackages = listOf(
-    "com.kakao.talk",                 // 카카오톡
-    "com.android.mms",                // 삼성/제조사 기본 문자
-    "com.google.android.apps.messaging", // 구글 메시지
-    "com.samsung.android.messaging"    // 최신 삼성 메시지
-  )
+    private val kakaotalkPackage = "com.kakao.talk"
+    private val smsPackages = listOf(
+        "com.android.mms",
+        "com.google.android.apps.messaging",
+        "com.samsung.android.messaging"
+    )
 
-  @RequiresApi(Build.VERSION_CODES.P)
-  override fun onNotificationPosted(sbn: StatusBarNotification) {
-    val packageName = sbn.packageName
-    if (!targetPackages.contains(packageName)) return
+    private val kakaoHandler = KakaoTalkMessageHandler()
+    private val smsHandler = SmsMessageHandler()
 
-    val extras = sbn.notification.extras
-    val sender = extras.getString(Notification.EXTRA_TITLE) ?: "알 수 없는 발신자"
-    val content = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
-    val room = extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString() ?: "개인 메시지"
-  var phone = ""
-    when (packageName) {
-      "com.kakao.talk" -> {
-        // 카톡은 보통 EXTRA_TITLE이 보낸 사람 이름입니다.
-        // 단, 단톡방은 '방이름 : 이름' 형태로 올 수 있으니 파싱이 필요합니다.
-      }
-      "com.android.mms", "com.google.android.apps.messaging", "com.samsung.android.messaging" -> {
-        // SMS 앱의 경우 EXTRA_MESSAGING_PERSON 확인
-        val person = extras.getParcelable<Person>(Notification.EXTRA_MESSAGING_PERSON)
-        val phoneNumber = person?.uri  // tel:010...
-//        EXTRA_MESSAGING_STYLE_USER  나
-        phone = phoneNumber.toString()
+    @RequiresApi(Build.VERSION_CODES.P)
+    override fun onNotificationPosted(sbn: StatusBarNotification) {
+        val packageName = sbn.packageName
 
+        val messageInfo = when {
+            packageName == kakaotalkPackage -> kakaoHandler.extractMessage(sbn)
+            packageName in smsPackages -> smsHandler.extractMessage(sbn, packageName)
+            else -> return
+        } ?: return
 
-        // 번호가 없다면 title에서 숫자만 추출하는 fallback 로직 검토
-      }
+        Log.d(TAG, "[${messageInfo.type}] ${messageInfo.sender}: ${messageInfo.content}")
+
+        repository.saveMessage(messageInfo)
     }
 
-
-    val messages = extras.getParcelableArray(Notification.EXTRA_MESSAGES)
-
-    if (messages != null && messages.isNotEmpty()) {
-      // 2. 가장 마지막(최신) 메시지를 확인합니다.
-      val lastMessage = messages.last() as Bundle
-
-      // 3. 그 메시지를 보낸 '사람'을 추출합니다.
-      val senderPerson = lastMessage.getParcelable<Person>("sender_person")
-
-      if (senderPerson != null) {
-        val realSenderName = senderPerson.name
-        val realSenderUri = senderPerson.uri // 여기가 진짜 상대방 번호!
-        Log.d("SMS_LOG", "진짜 발신자: $realSenderName, 번호: $realSenderUri")
-      }
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.d(TAG, "알림 리스너 연결됨")
+        startMessageTransportService()
     }
 
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        Log.d(TAG, "알림 리스너 연결 해제")
+        stopMessageTransportService()
+    }
 
-    // 서비스 유형 분류
-    val type = if (packageName == "com.kakao.talk") "카카오톡" else "문자메시지"
+    private fun startMessageTransportService() {
+        val intent = Intent(this, MessageTransportService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
 
-    val txt = extras.toString()
-    Log.d(TAG, "[$type] 발신: $sender, 내용: $content $phone")
+    private fun stopMessageTransportService() {
+        val intent = Intent(this, MessageTransportService::class.java)
+        stopService(intent)
+    }
 
-    // 슬랙 전송 호출 (유형 정보를 추가로 보냄)
-    sendToSlack(type, sender, content, room)
-  }
-
-  private fun sendToSlack(type: String, sender: String, message: String, room: String) {
-    // 여기에 이전에 작성한 OkHttp 슬랙 전송 로직이 들어갑니다.
-    // 슬랙 페이로드에 "text": "[$type] $sender: $message" 식으로 구성하면 구분하기 좋습니다.
-  }
+    override fun onNotificationRemoved(sbn: StatusBarNotification) {
+        // 알림이 제거되었을 때 처리
+    }
 }

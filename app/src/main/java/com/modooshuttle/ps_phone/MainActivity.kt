@@ -3,6 +3,7 @@ package com.modooshuttle.ps_phone
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.NotificationManagerCompat
 import com.modooshuttle.ps_phone.ui.theme.Ps_phoneTheme
 
 class MainActivity : ComponentActivity() {
@@ -29,9 +31,15 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
-    this.requestNotificationPermission()
+    if (!isNotificationListenerEnabled()) {
+      this.requestNotificationPermission()
+    }
   }
 
+  private fun isNotificationListenerEnabled(): Boolean {
+    val enabledListeners = NotificationManagerCompat.getEnabledListenerPackages(this)
+    return packageName in enabledListeners
+  }
 
   private fun requestNotificationPermission() {
     try {

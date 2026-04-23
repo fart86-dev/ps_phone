@@ -62,4 +62,13 @@ dependencies {
   // Firebase
   implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
   implementation("com.google.firebase:firebase-messaging")
+
+  // Network
+  implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+  // JSON
+  implementation("org.json:json:20231013")
+
+  // Coroutines
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }

@@ -1,6 +1,7 @@
 package com.modooshuttle.ps_phone.notification
 
 import android.util.Log
+import com.modooshuttle.ps_phone.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.MediaType.Companion.toMediaType
@@ -16,9 +17,9 @@ class NotionService {
     private val TAG = "NotionService"
     private val client = OkHttpClient()
 
-    // Notion API 설정
     private val notionApiUrl = "https://api.notion.com/v1/pages"
-
+    private val databaseId = BuildConfig.NOTION_DATABASE_ID
+    private val notionToken = BuildConfig.NOTION_API_TOKEN
 
     fun saveMessageToNotion(message: MessageInfo) {
         try {

@@ -21,6 +21,12 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    val notionApiToken = project.findProperty("NOTION_API_TOKEN") as? String ?: ""
+    val notionDatabaseId = project.findProperty("NOTION_DATABASE_ID") as? String ?: ""
+
+    buildConfigField("String", "NOTION_API_TOKEN", "\"$notionApiToken\"")
+    buildConfigField("String", "NOTION_DATABASE_ID", "\"$notionDatabaseId\"")
   }
 
   buildTypes {
@@ -38,6 +44,7 @@ android {
   }
   buildFeatures {
     compose = true
+    buildConfig = true
   }
 }
 

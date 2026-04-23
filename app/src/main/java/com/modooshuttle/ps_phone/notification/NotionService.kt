@@ -18,8 +18,7 @@ class NotionService {
 
     // Notion API 설정
     private val notionApiUrl = "https://api.notion.com/v1/pages"
-    private val databaseId = "34b40c143d6e80cc8e99df4c498c8c53"
-    private val notionToken = "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"
+
 
     fun saveMessageToNotion(message: MessageInfo) {
         try {

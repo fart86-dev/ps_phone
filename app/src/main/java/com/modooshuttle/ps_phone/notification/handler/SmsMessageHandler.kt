@@ -30,6 +30,11 @@ class SmsMessageHandler {
             null
         } ?: extractPhoneFromTitle(sender)
 
+        if (sender.contains("제목") || content.contains("제목")) {
+            Log.w(TAG, "[경고] 제목 관련 메시지 감지 - sender:[$sender], content:[$content], package:[$packageName]")
+            logExtrasDebug(extras, packageName)
+        }
+
         Log.d(TAG, "[$sender] (${phone ?: "번호 없음"}): $content")
 
         return MessageInfo(
@@ -40,6 +45,30 @@ class SmsMessageHandler {
             room = "개인",
             packageName = packageName
         )
+    }
+
+    private fun logExtrasDebug(extras: Bundle, packageName: String) {
+        Log.d(TAG, "=== Extras Debug Info ===")
+        Log.d(TAG, "Package: $packageName")
+        Log.d(TAG, "EXTRA_TITLE: ${extras.getString(Notification.EXTRA_TITLE)}")
+        Log.d(TAG, "EXTRA_TEXT: ${extras.getCharSequence(Notification.EXTRA_TEXT)}")
+        Log.d(TAG, "EXTRA_SUB_TEXT: ${extras.getCharSequence(Notification.EXTRA_SUB_TEXT)}")
+        Log.d(TAG, "EXTRA_BIG_TEXT: ${extras.getCharSequence(Notification.EXTRA_BIG_TEXT)}")
+
+        val messages = extras.getParcelableArray("android.messages")
+        if (messages != null) {
+            Log.d(TAG, "android.messages count: ${messages.size}")
+            for ((i, message) in messages.withIndex()) {
+                val sms = message as? Bundle
+                if (sms != null) {
+                    Log.d(TAG, "  Message[$i]:")
+                    Log.d(TAG, "    text: ${sms.getString("text")}")
+                    Log.d(TAG, "    sender_person: ${sms.getParcelable<Person>("sender_person")?.name}")
+                    Log.d(TAG, "    timestamp: ${sms.getLong("timestamp", -1)}")
+                }
+            }
+        }
+        Log.d(TAG, "====================")
     }
 
     private fun isRealSmsMessage(extras: Bundle): Boolean {

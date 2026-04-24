@@ -15,14 +15,20 @@ class KakaoTalkMessageHandler {
         val sender = extras.getString(Notification.EXTRA_TITLE) ?: return null
         val content = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: return null
 
-        // 단톡방 처리: "방이름 : 이름" 형태
-        val (room, actualSender) = parseTitle(sender)
+        logKakaoExtras(extras, sender)
 
-        Log.d(TAG, "[$actualSender] @ [$room]: $content")
+        val isGroupConversation = extras.getBoolean("android.isGroupConversation", false)
+        val room = if (isGroupConversation) {
+            extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString() ?: "그룹"
+        } else {
+            "개인"
+        }
+
+        Log.d(TAG, "[$sender] @ [$room]: $content")
 
         return MessageInfo(
             type = "카카오톡",
-            sender = actualSender,
+            sender = sender,
             phone = null,
             content = content,
             room = room,
@@ -30,14 +36,52 @@ class KakaoTalkMessageHandler {
         )
     }
 
-    private fun parseTitle(title: String): Pair<String, String> {
-        // "방이름 : 이름" 형태 체크
-        return if (title.contains(" : ")) {
-            val parts = title.split(" : ", limit = 2)
-            Pair(parts[0], parts[1])
-        } else {
-            // 개인 메시지
-            Pair("개인", title)
+    private fun logKakaoExtras(extras: android.os.Bundle, sender: String) {
+        Log.d(TAG, "=== Kakao Extras Debug ===")
+        Log.d(TAG, "EXTRA_TITLE: $sender")
+        Log.d(TAG, "isGroupConversation: ${extras.getBoolean("android.isGroupConversation")}")
+        Log.d(TAG, "All extras keys: ${extras.keySet()}")
+        for (key in extras.keySet()) {
+            val value = extras.get(key)
+            if (value != null && value !is ByteArray && !key.startsWith("android.people")) {
+                Log.d(TAG, "  $key: $value")
+            }
         }
+
+        val messagingStyleUser = extras.getBundle("android.messagingStyleUser")
+        if (messagingStyleUser != null) {
+            Log.d(TAG, "messagingStyleUser keys: ${messagingStyleUser.keySet()}")
+            Log.d(TAG, "  name: ${messagingStyleUser.getString("name")}")
+            Log.d(TAG, "  uri: ${messagingStyleUser.getString("uri")}")
+        }
+
+        val messages = extras.getParcelableArray("android.messages")
+        if (messages != null) {
+            Log.d(TAG, "android.messages count: ${messages.size}")
+            for ((i, msg) in messages.withIndex()) {
+                val bundle = msg as? android.os.Bundle
+                if (bundle != null) {
+                    Log.d(TAG, "  Message[$i]:")
+                    Log.d(TAG, "    text: ${bundle.getString("text")}")
+                    Log.d(TAG, "    sender: ${bundle.getString("sender")}")
+                    val person = bundle.getParcelable<android.app.Person>("sender_person")
+                    if (person != null) {
+                        Log.d(TAG, "    sender_person.name: ${person.name}")
+                        Log.d(TAG, "    sender_person.uri: ${person.uri}")
+                    }
+                    Log.d(TAG, "    message keys: ${bundle.keySet()}")
+                    val msgExtras = bundle.getBundle("extras")
+                    if (msgExtras != null) {
+                        Log.d(TAG, "    message extras keys: ${msgExtras.keySet()}")
+                        for (key in msgExtras.keySet()) {
+                            Log.d(TAG, "      $key: ${msgExtras.get(key)}")
+                        }
+                    }
+                }
+            }
+        }
+
+        Log.d(TAG, "=======================")
     }
+
 }

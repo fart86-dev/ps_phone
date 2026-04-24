@@ -65,6 +65,15 @@ class NotionService {
             })
         }
 
+        // 방 (카카오톡만 해당)
+        if (message.type == "카카오톡") {
+            properties.put("방", JSONObject().apply {
+                val richTextArray = org.json.JSONArray()
+                richTextArray.put(JSONObject().put("text", JSONObject().put("content", message.room)))
+                put("rich_text", richTextArray)
+            })
+        }
+
         // 내용
         properties.put("내용", JSONObject().apply {
             val richTextArray = org.json.JSONArray()

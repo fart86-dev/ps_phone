@@ -10,9 +10,9 @@ import com.modooshuttle.ps_phone.notification.handler.KakaoTalkMessageHandler
 import com.modooshuttle.ps_phone.notification.handler.SmsMessageHandler
 
 data class MessageInfo(
-    val type: String,              // "카카오톡" or "문자메시지"
+    val type: String,              // "카카오톡" / "SMS" / "LMS" / "MMS"
     val sender: String,            // 발신자 이름
-    val phone: String?,            // 전화번호 (문자메시지만 해당)
+    val phone: String?,            // 전화번호 (SMS/LMS/MMS만 해당)
     val content: String,           // 메시지 내용
     val room: String,              // 방 이름 (카톡 단톡방이면 방 이름, 아니면 "개인")
     val packageName: String,       // 원본 앱 패키지명
@@ -32,7 +32,16 @@ class IntegratedListenerService : NotificationListenerService() {
     )
 
     private val kakaoHandler = KakaoTalkMessageHandler()
-    private val smsHandler = SmsMessageHandler()
+    private lateinit var smsHandler: SmsMessageHandler
+
+    private var lastMessageKey: String = ""
+    private var lastMessageTime: Long = 0
+    private val DUPLICATE_CHECK_WINDOW_MS = 1000L
+
+    override fun onCreate() {
+        super.onCreate()
+        smsHandler = SmsMessageHandler(this)
+    }
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -43,6 +52,18 @@ class IntegratedListenerService : NotificationListenerService() {
             packageName in smsPackages -> smsHandler.extractMessage(sbn, packageName)
             else -> return
         } ?: return
+
+        // 중복 메시지 필터링
+        val currentKey = "${messageInfo.type}|${messageInfo.sender}|${messageInfo.content}"
+        val currentTime = System.currentTimeMillis()
+
+        if (currentKey == lastMessageKey && (currentTime - lastMessageTime) < DUPLICATE_CHECK_WINDOW_MS) {
+            Log.d(TAG, "[중복] 같은 메시지가 1초 내에 감지됨: ${messageInfo.sender}")
+            return
+        }
+
+        lastMessageKey = currentKey
+        lastMessageTime = currentTime
 
         Log.d(TAG, "[${messageInfo.type}] ${messageInfo.sender}: ${messageInfo.content}")
 

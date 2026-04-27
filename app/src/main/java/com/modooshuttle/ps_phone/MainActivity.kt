@@ -131,13 +131,14 @@ fun SettingsScreen(context: MainActivity, modifier: Modifier = Modifier) {
       )
     }
 
-    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-      Text("통화 녹음", modifier = Modifier.weight(1f))
-      Switch(
-        checked = isCallRecordingEnabled,
-        onCheckedChange = { isCallRecordingEnabled = it }
-      )
-    }
+    // TODO: WorkManager 기반 S3 업로드 시스템 구현 후 활성화
+    // Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+    //   Text("통화 녹음", modifier = Modifier.weight(1f))
+    //   Switch(
+    //     checked = isCallRecordingEnabled,
+    //     onCheckedChange = { isCallRecordingEnabled = it }
+    //   )
+    // }
 
     Text("담당자 이름", modifier = Modifier.padding(bottom = 8.dp))
     TextField(
@@ -152,6 +153,7 @@ fun SettingsScreen(context: MainActivity, modifier: Modifier = Modifier) {
         prefs.edit()
           .putBoolean("kakao_enabled", isKakaoEnabled)
           .putBoolean("sms_enabled", isSmsEnabled)
+          // .putBoolean("call_recording_enabled", isCallRecordingEnabled) // TODO: WorkManager 구현 후 활성화
           .putString("handler_name", handlerName)
           .apply()
         Toast.makeText(context, "저장이 완료되었습니다.", Toast.LENGTH_SHORT).show()

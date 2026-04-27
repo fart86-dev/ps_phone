@@ -106,20 +106,24 @@ class IntegratedListenerService : NotificationListenerService() {
     }
 
     private fun startCallRecordingService() {
-        val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
-        val isCallRecordingEnabled = prefs.getBoolean("call_recording_enabled", false)
+        // TODO: WorkManager 기반 S3 업로드 시스템 구현 후 활성화
+        Log.d(TAG, "통화 녹음 감시는 아직 구현 중입니다. (WorkManager 대기)")
+        return
 
-        if (!isCallRecordingEnabled) {
-            Log.d(TAG, "통화 녹음 감시가 비활성화됨")
-            return
-        }
-
-        val intent = Intent(this, CallRecordingService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
+        // val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
+        // val isCallRecordingEnabled = prefs.getBoolean("call_recording_enabled", false)
+        //
+        // if (!isCallRecordingEnabled) {
+        //     Log.d(TAG, "통화 녹음 감시가 비활성화됨")
+        //     return
+        // }
+        //
+        // val intent = Intent(this, CallRecordingService::class.java)
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        //     startForegroundService(intent)
+        // } else {
+        //     startService(intent)
+        // }
     }
 
     private fun stopCallRecordingService() {

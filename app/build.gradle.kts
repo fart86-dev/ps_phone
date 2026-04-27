@@ -24,9 +24,17 @@ android {
 
     val notionApiToken = project.findProperty("NOTION_API_TOKEN") as? String ?: ""
     val notionDatabaseId = project.findProperty("NOTION_DATABASE_ID") as? String ?: ""
+    val awsAccessKeyId = project.findProperty("AWS_ACCESS_KEY_ID") as? String ?: ""
+    val awsSecretAccessKey = project.findProperty("AWS_SECRET_ACCESS_KEY") as? String ?: ""
+    val awsS3BucketName = project.findProperty("AWS_S3_BUCKET_NAME") as? String ?: ""
+    val awsS3Region = project.findProperty("AWS_S3_REGION") as? String ?: ""
 
     buildConfigField("String", "NOTION_API_TOKEN", "\"$notionApiToken\"")
     buildConfigField("String", "NOTION_DATABASE_ID", "\"$notionDatabaseId\"")
+    buildConfigField("String", "AWS_ACCESS_KEY_ID", "\"$awsAccessKeyId\"")
+    buildConfigField("String", "AWS_SECRET_ACCESS_KEY", "\"$awsSecretAccessKey\"")
+    buildConfigField("String", "AWS_S3_BUCKET_NAME", "\"$awsS3BucketName\"")
+    buildConfigField("String", "AWS_S3_REGION", "\"$awsS3Region\"")
   }
 
   buildTypes {
@@ -79,4 +87,8 @@ dependencies {
 
   // Coroutines
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+  // AWS SDK for Android
+  implementation("com.amazonaws:aws-android-sdk-core:2.52.0")
+  implementation("com.amazonaws:aws-android-sdk-s3:2.52.0")
 }

@@ -22,7 +22,12 @@ kotlin.code.style=official
 # thereby reducing the size of the R class for that library
 android.nonTransitiveRClass=true
 
-# Notion API Configuration
-# TODO: 로컬 gradle.properties 파일을 생성하고 아래 값을 채워넣으세요
-# NOTION_API_TOKEN=ntn_YOUR_TOKEN_HERE
-# NOTION_DATABASE_ID=YOUR_DATABASE_ID_HERE
+# Notion API Configuration (optional, prefer environment variables)
+# NOTION_API_TOKEN=your_notion_api_token_here
+# NOTION_DATABASE_ID=your_notion_database_id_here
+
+# AWS S3 Configuration (optional, prefer environment variables)
+# AWS_ACCESS_KEY_ID=your_aws_access_key_id_here
+# AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
+# AWS_S3_BUCKET_NAME=ps-phone-recordings
+# AWS_S3_REGION=ap-northeast-2

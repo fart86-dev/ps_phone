@@ -4,6 +4,22 @@ plugins {
   alias(libs.plugins.kotlin.compose)
 }
 
+fun loadEnv(fileName: String) {
+  val envFile = rootProject.file(fileName)
+  if (envFile.exists()) {
+    envFile.readLines().forEach { line ->
+      if (line.isNotEmpty() && !line.startsWith("#")) {
+        val parts = line.split("=", limit = 2)
+        if (parts.size == 2) {
+          val key = parts[0].trim()
+          val value = parts[1].trim()
+          System.setProperty(key, value)
+        }
+      }
+    }
+  }
+}
+
 // google-services.json이 있을 때만 Google Services 플러그인 적용
 if (file("google-services.json").exists()) {
   apply(plugin = "com.google.gms.google-services")
@@ -22,12 +38,18 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    val notionApiToken = project.findProperty("NOTION_API_TOKEN") as? String ?: ""
-    val notionDatabaseId = project.findProperty("NOTION_DATABASE_ID") as? String ?: ""
-    val awsAccessKeyId = project.findProperty("AWS_ACCESS_KEY_ID") as? String ?: ""
-    val awsSecretAccessKey = project.findProperty("AWS_SECRET_ACCESS_KEY") as? String ?: ""
-    val awsS3BucketName = project.findProperty("AWS_S3_BUCKET_NAME") as? String ?: ""
-    val awsS3Region = project.findProperty("AWS_S3_REGION") as? String ?: ""
+    val isBuildingDebug = gradle.startParameter.taskNames.any {
+      it.contains("Debug", ignoreCase = true)
+    }
+    val envFileName = if (isBuildingDebug) ".env.development" else ".env.production"
+    loadEnv(envFileName)
+
+    val notionApiToken = System.getenv("NOTION_API_TOKEN") ?: project.findProperty("NOTION_API_TOKEN") as? String ?: ""
+    val notionDatabaseId = System.getenv("NOTION_DATABASE_ID") ?: project.findProperty("NOTION_DATABASE_ID") as? String ?: ""
+    val awsAccessKeyId = System.getenv("AWS_ACCESS_KEY_ID") ?: project.findProperty("AWS_ACCESS_KEY_ID") as? String ?: ""
+    val awsSecretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY") ?: project.findProperty("AWS_SECRET_ACCESS_KEY") as? String ?: ""
+    val awsS3BucketName = System.getenv("AWS_S3_BUCKET_NAME") ?: project.findProperty("AWS_S3_BUCKET_NAME") as? String ?: ""
+    val awsS3Region = System.getenv("AWS_S3_REGION") ?: project.findProperty("AWS_S3_REGION") as? String ?: ""
 
     buildConfigField("String", "NOTION_API_TOKEN", "\"$notionApiToken\"")
     buildConfigField("String", "NOTION_DATABASE_ID", "\"$notionDatabaseId\"")

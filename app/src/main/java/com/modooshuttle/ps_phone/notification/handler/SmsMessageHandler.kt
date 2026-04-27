@@ -16,15 +16,23 @@ import com.modooshuttle.ps_phone.notification.MessageInfo
 class SmsMessageHandler(private val context: Context) {
 
     private val TAG = "SmsHandler"
+    private val systemNotificationSenders = setOf(
+        "기기 페어링"
+    )
 
     fun extractMessage(sbn: StatusBarNotification, packageName: String): MessageInfo? {
         val extras = sbn.notification.extras
+
+        val sender = extras.getString(Notification.EXTRA_TITLE) ?: return null
+        if (sender in systemNotificationSenders) {
+            Log.d(TAG, "[필터됨] 시스템 알림: $sender")
+            return null
+        }
 
         if (!isSmsMessage(extras)) {
             return null
         }
 
-        val sender = extras.getString(Notification.EXTRA_TITLE) ?: return null
         val content = extractContent(extras) ?: return null
 
         val phone = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {

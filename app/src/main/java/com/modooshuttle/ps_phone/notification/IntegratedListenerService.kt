@@ -16,7 +16,8 @@ data class MessageInfo(
     val content: String,           // 메시지 내용
     val room: String,              // 방 이름 (카톡 단톡방이면 방 이름, 아니면 "개인")
     val packageName: String,       // 원본 앱 패키지명
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val handler: String = ""       // 담당자 이름
 )
 
 class IntegratedListenerService : NotificationListenerService() {
@@ -46,28 +47,34 @@ class IntegratedListenerService : NotificationListenerService() {
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
+        val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
+        val isKakaoEnabled = prefs.getBoolean("kakao_enabled", true)
+        val isSmsEnabled = prefs.getBoolean("sms_enabled", true)
 
         val messageInfo = when {
-            packageName == kakaotalkPackage -> kakaoHandler.extractMessage(sbn)
-            packageName in smsPackages -> smsHandler.extractMessage(sbn, packageName)
+            packageName == kakaotalkPackage && isKakaoEnabled -> kakaoHandler.extractMessage(sbn)
+            packageName in smsPackages && isSmsEnabled -> smsHandler.extractMessage(sbn, packageName)
             else -> return
         } ?: return
 
+        val handlerName = prefs.getString("handler_name", "") ?: ""
+        val finalMessageInfo = messageInfo.copy(handler = handlerName)
+
         // 중복 메시지 필터링
-        val currentKey = "${messageInfo.type}|${messageInfo.sender}|${messageInfo.content}"
+        val currentKey = "${finalMessageInfo.type}|${finalMessageInfo.sender}|${finalMessageInfo.content}"
         val currentTime = System.currentTimeMillis()
 
         if (currentKey == lastMessageKey && (currentTime - lastMessageTime) < DUPLICATE_CHECK_WINDOW_MS) {
-            Log.d(TAG, "[중복] 같은 메시지가 1초 내에 감지됨: ${messageInfo.sender}")
+            Log.d(TAG, "[중복] 같은 메시지가 1초 내에 감지됨: ${finalMessageInfo.sender}")
             return
         }
 
         lastMessageKey = currentKey
         lastMessageTime = currentTime
 
-        Log.d(TAG, "[${messageInfo.type}] ${messageInfo.sender}: ${messageInfo.content}")
+        Log.d(TAG, "[${finalMessageInfo.type}] ${finalMessageInfo.sender}: ${finalMessageInfo.content}")
 
-        repository.saveMessage(messageInfo)
+        repository.saveMessage(finalMessageInfo)
     }
 
     override fun onListenerConnected() {

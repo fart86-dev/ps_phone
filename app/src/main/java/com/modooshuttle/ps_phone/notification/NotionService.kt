@@ -74,6 +74,15 @@ class NotionService {
             })
         }
 
+        // 담당자 (입력된 경우만)
+        if (message.handler.isNotEmpty()) {
+            properties.put("담당자", JSONObject().apply {
+                val richTextArray = org.json.JSONArray()
+                richTextArray.put(JSONObject().put("text", JSONObject().put("content", message.handler)))
+                put("rich_text", richTextArray)
+            })
+        }
+
         // 내용
         properties.put("내용", JSONObject().apply {
             val richTextArray = org.json.JSONArray()

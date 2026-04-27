@@ -101,6 +101,9 @@ fun SettingsScreen(context: MainActivity, modifier: Modifier = Modifier) {
   var isSmsEnabled by remember {
     mutableStateOf(prefs.getBoolean("sms_enabled", false))
   }
+  var isCallRecordingEnabled by remember {
+    mutableStateOf(prefs.getBoolean("call_recording_enabled", false))
+  }
   var handlerName by remember {
     mutableStateOf(prefs.getString("handler_name", "") ?: "")
   }
@@ -125,6 +128,14 @@ fun SettingsScreen(context: MainActivity, modifier: Modifier = Modifier) {
       Switch(
         checked = isSmsEnabled,
         onCheckedChange = { isSmsEnabled = it }
+      )
+    }
+
+    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+      Text("통화 녹음", modifier = Modifier.weight(1f))
+      Switch(
+        checked = isCallRecordingEnabled,
+        onCheckedChange = { isCallRecordingEnabled = it }
       )
     }
 

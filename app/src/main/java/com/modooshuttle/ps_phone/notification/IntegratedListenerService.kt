@@ -81,12 +81,14 @@ class IntegratedListenerService : NotificationListenerService() {
         super.onListenerConnected()
         Log.d(TAG, "알림 리스너 연결됨")
         startMessageTransportService()
+        startCallRecordingService()
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
         Log.d(TAG, "알림 리스너 연결 해제")
         stopMessageTransportService()
+        stopCallRecordingService()
     }
 
     private fun startMessageTransportService() {
@@ -100,6 +102,28 @@ class IntegratedListenerService : NotificationListenerService() {
 
     private fun stopMessageTransportService() {
         val intent = Intent(this, MessageTransportService::class.java)
+        stopService(intent)
+    }
+
+    private fun startCallRecordingService() {
+        val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
+        val isCallRecordingEnabled = prefs.getBoolean("call_recording_enabled", false)
+
+        if (!isCallRecordingEnabled) {
+            Log.d(TAG, "통화 녹음 감시가 비활성화됨")
+            return
+        }
+
+        val intent = Intent(this, CallRecordingService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
+    private fun stopCallRecordingService() {
+        val intent = Intent(this, CallRecordingService::class.java)
         stopService(intent)
     }
 

@@ -1,14 +1,17 @@
 package com.modooshuttle.ps_phone.notification.handler
 
 import android.app.Notification
+import android.os.Build
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.modooshuttle.ps_phone.notification.MessageInfo
 
 class KakaoTalkMessageHandler {
 
     private val TAG = "KakaoTalkHandler"
 
+    @RequiresApi(Build.VERSION_CODES.P)
     fun extractMessage(sbn: StatusBarNotification): MessageInfo? {
         val extras = sbn.notification.extras
 
@@ -36,6 +39,7 @@ class KakaoTalkMessageHandler {
         )
     }
 
+    @RequiresApi(Build.VERSION_CODES.P)
     private fun logKakaoExtras(extras: android.os.Bundle, sender: String) {
         Log.d(TAG, "=== Kakao Extras Debug ===")
         Log.d(TAG, "EXTRA_TITLE: $sender")

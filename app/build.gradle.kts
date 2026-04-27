@@ -38,10 +38,10 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    val isBuildingDebug = gradle.startParameter.taskNames.any {
-      it.contains("Debug", ignoreCase = true)
+    val isBuildingProd = gradle.startParameter.taskNames.any {
+      it.contains("Prod", ignoreCase = true)
     }
-    val envFileName = if (isBuildingDebug) ".env.development" else ".env.production"
+    val envFileName = if (isBuildingProd) ".env.production" else ".env.development"
     loadEnv(envFileName)
 
     val notionApiToken = System.getenv("NOTION_API_TOKEN") ?: project.findProperty("NOTION_API_TOKEN") as? String ?: ""
@@ -65,6 +65,18 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }
+  flavorDimensions.add("environment")
+  productFlavors {
+    create("dev") {
+      dimension = "environment"
+      applicationIdSuffix = ".dev"
+    }
+    create("prod") {
+      dimension = "environment"
+      applicationIdSuffix = ".prod"
+    }
+  }
+
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11

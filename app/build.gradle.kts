@@ -44,12 +44,12 @@ android {
     val envFileName = if (isBuildingProd) ".env.production" else ".env.development"
     loadEnv(envFileName)
 
-    val notionApiToken = System.getenv("NOTION_API_TOKEN") ?: project.findProperty("NOTION_API_TOKEN") as? String ?: ""
-    val notionDatabaseId = System.getenv("NOTION_DATABASE_ID") ?: project.findProperty("NOTION_DATABASE_ID") as? String ?: ""
-    val awsAccessKeyId = System.getenv("AWS_ACCESS_KEY_ID") ?: project.findProperty("AWS_ACCESS_KEY_ID") as? String ?: ""
-    val awsSecretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY") ?: project.findProperty("AWS_SECRET_ACCESS_KEY") as? String ?: ""
-    val awsS3BucketName = System.getenv("AWS_S3_BUCKET_NAME") ?: project.findProperty("AWS_S3_BUCKET_NAME") as? String ?: ""
-    val awsS3Region = System.getenv("AWS_S3_REGION") ?: project.findProperty("AWS_S3_REGION") as? String ?: ""
+    val notionApiToken = System.getProperty("NOTION_API_TOKEN") ?: project.findProperty("NOTION_API_TOKEN") as? String ?: ""
+    val notionDatabaseId = System.getProperty("NOTION_DATABASE_ID") ?: project.findProperty("NOTION_DATABASE_ID") as? String ?: ""
+    val awsAccessKeyId = System.getProperty("AWS_ACCESS_KEY_ID") ?: project.findProperty("AWS_ACCESS_KEY_ID") as? String ?: ""
+    val awsSecretAccessKey = System.getProperty("AWS_SECRET_ACCESS_KEY") ?: project.findProperty("AWS_SECRET_ACCESS_KEY") as? String ?: ""
+    val awsS3BucketName = System.getProperty("AWS_S3_BUCKET_NAME") ?: project.findProperty("AWS_S3_BUCKET_NAME") as? String ?: ""
+    val awsS3Region = System.getProperty("AWS_S3_REGION") ?: project.findProperty("AWS_S3_REGION") as? String ?: ""
 
     buildConfigField("String", "NOTION_API_TOKEN", "\"$notionApiToken\"")
     buildConfigField("String", "NOTION_DATABASE_ID", "\"$notionDatabaseId\"")

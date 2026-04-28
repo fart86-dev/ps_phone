@@ -18,8 +18,20 @@ class NotionService {
     private val client = OkHttpClient()
 
     private val notionApiUrl = "https://api.notion.com/v1/pages"
-    private val databaseId = BuildConfig.NOTION_DATABASE_ID
+    private val databaseId = formatDatabaseId(BuildConfig.NOTION_DATABASE_ID)
     private val notionToken = BuildConfig.NOTION_API_TOKEN
+
+    private fun formatDatabaseId(id: String): String {
+        // 하이픈이 없는 UUID를 UUID 형식으로 변환
+        // 34f40c143d6e80619d25e60b8344eeb3 → 34f40c14-3d6e-8061-9d25-e60b8344eeb3
+        if (id.isEmpty()) {
+            Log.e(TAG, "DATABASE_ID가 비어있습니다. .env 파일의 NOTION_DATABASE_ID를 확인하세요")
+            return ""
+        }
+        return if (id.contains("-")) id else {
+            "${id.substring(0, 8)}-${id.substring(8, 12)}-${id.substring(12, 16)}-${id.substring(16, 20)}-${id.substring(20)}"
+        }
+    }
 
     fun saveMessageToNotion(message: MessageInfo) {
         try {
